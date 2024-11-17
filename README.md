@@ -1,88 +1,82 @@
 [![CI](https://github.com/Da-Justin-Lin/ids706_dl402_mini11/actions/workflows/cicd.yml/badge.svg)](https://github.com/Da-Justin-Lin/ids706_dl402_mini11/actions/workflows/cicd.yml)
-## Template for Python projects with RUFF linter
 
-# PySpark Data Processing Project
+# ETL Workflow with Databrick
 
-This project uses **PySpark** to perform data processing and analysis on a large dataset. The project demonstrates data transformations, Spark SQL queries, and basic operations to handle and analyze data at scale using Apache Spark.
+This repository showcases how to use **Databricks** to set up an end-to-end workflow for extracting, transforming, loading, and querying the popular Iris dataset. The project demonstrates the simplicity and power of Databricks in handling data pipelines and analytics.
 
-## Project Overview
+## Workflow Overview
 
-This project provides a framework for data processing using PySpark, demonstrating:
-- Data loading and cleaning
-- Transformations and aggregations
-- SQL-style queries for data analysis
+![Alt Text](screenshots/workflow.png)
 
-The project is particularly suitable for handling large datasets and generating insights through Spark’s parallel processing capabilities.
+### 1. **Extract**
+The Iris dataset was sourced from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/iris) or prepackaged in common libraries like `sklearn`. The data was uploaded to Databricks' file system (DBFS) for further processing.
 
-## Requirements
+- Data uploaded to `/dbfs/FileStore/tables/iris.csv`.
 
-- Python 3.8 or later
-- [Apache Spark](https://spark.apache.org/)
-- [PySpark](https://pypi.org/project/pyspark/) library
+### 2. **Transform**
+Using Databricks' notebooks, the dataset was cleaned and transformed:
+- Missing values (if any) were handled.
+- Features were normalized.
+- Columns were renamed for better clarity.
 
-You can install dependencies with:
-```bash
-pip install -r requirements.txt
+Code snippet:
+```python
+from pyspark.sql.functions import col
+
+# Load data
+df = spark.read.csv("/FileStore/tables/iris.csv", header=True, inferSchema=True)
+
+# Transformations
+df = df.withColumnRenamed("sepal_length", "SepalLength")        .withColumnRenamed("sepal_width", "SepalWidth")        .withColumnRenamed("petal_length", "PetalLength")        .withColumnRenamed("petal_width", "PetalWidth")
+
+# Display transformed data
+df.show()
 ```
 
-## Setup
+### 3. **Load**
+The cleaned and transformed data was stored back into a **Delta Table** for efficient querying:
+- Data written to Delta Lake.
+- Delta Table location: `/FileStore/delta/iris`.
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/Da-Justin-Lin/ids706_dl402_mini10.git
-   cd pyspark-data-processing
-   ```
-
-2. **Install PySpark** (if not already installed):
-   ```bash
-   pip install pyspark
-   ```
-
-## Usage
-
-To start using the PySpark project, follow these steps:
-
-1. **Run the main PySpark script**:
-   ```bash
-   make test
-   ```
-
-2. **Modify the Dataset Path**:
-   - If you’re using a different dataset, replace the file path in the script to load your data.
-
-3. **Inspect Output**:
-   - Results from transformations and Spark SQL queries will be printed in the console or saved to specified output files.
-
-## Features
-
-- **Data Transformation**: Filters and manipulates data based on specified conditions.
-- **Spark SQL Queries**: Executes SQL-like queries on large datasets using Spark SQL.
-- **Aggregation**: Performs aggregations like average, sum, and count for data analysis.
-- **Extensible**: Easily add custom transformations and queries to suit your data analysis needs.
-
-## Running Tests
-
-Unit tests are included for core transformations and Spark SQL queries. To run tests:
-
-1. Install [pytest](https://pypi.org/project/pytest/) if not already installed:
-   ```bash
-   make install
-   ```
-
-2. Run the tests:
-   ```bash
-   make test
-   ```
-
-Tests are designed to validate data processing steps and ensure the reliability of key functions.
-
-## Project Structure
-
+Code snippet:
+```python
+# Write to Delta
+df.write.format("delta").mode("overwrite").save("/FileStore/delta/iris")
 ```
-root/
-│                     
-├── main.py             # Main PySpark script
-├── test_main.py        # Unit tests for the PySpark script
-├── requirements.txt              # List of dependencies
-└── README.md                     # Project documentation
+![Alt Text](screenshots/dataset.png)
+
+### 4. **Query**
+Databricks' SQL interface was used to query the data:
+- Example queries include summary statistics, group-by operations, and visualization of distributions.
+
+![Alt Text](screenshots/query.png)
+
+SQL Example:
+```sql
+SELECT species, AVG(SepalLength) AS AvgSepalLength
+FROM delta.`/FileStore/delta/iris`
+GROUP BY species;
 ```
+
+---
+
+## Tools Used
+- **Databricks Workspace**: For managing and executing notebooks.
+- **DBFS (Databricks File System)**: For file storage.
+- **PySpark**: For data transformations.
+- **Delta Lake**: For optimized data storage and querying.
+- **SQL**: For analytics and insights.
+
+---
+
+## Setup Instructions
+1. **Upload the Dataset**:
+   - Navigate to the Databricks Workspace.
+   - Upload `iris.csv` to the `/FileStore/tables/` directory.
+
+2. **Run the Notebooks**:
+   - Execute the provided PySpark code in a Databricks notebook to extract, transform, and load the data.
+   - Save the transformed data to Delta Lake.
+
+3. **Query the Data**:
+   - Use the SQL editor in Databricks to run the provided queries or create custom ones.
