@@ -47,16 +47,9 @@ df.write.format("delta").mode("overwrite").save("/FileStore/delta/iris")
 
 ### 4. **Query**
 Databricks' SQL interface was used to query the data:
-- Example queries include summary statistics, group-by operations, and visualization of distributions.
+- Example queries include querying the iris with certain species.
 
 ![Alt Text](screenshots/query.png)
-
-SQL Example:
-```sql
-SELECT species, AVG(SepalLength) AS AvgSepalLength
-FROM delta.`/FileStore/delta/iris`
-GROUP BY species;
-```
 
 ---
 
